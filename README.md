@@ -131,11 +131,3 @@ POST /pagar
 
 - [API Pix - Pagamento](https://developers.inter.co/references/pix#pix-pagamento)
 - [Autenticação OAuth 2.0](https://developers.inter.co/references/authentication)
-
----
-
-## 🛡️ Aviso de Segurança
-
-- Nunca exponha seu `.env` ou certificados no repositório.
-- Certificados têm validade limitada — configure rotação segura.
-- Use HTTPS e proteja o backend com autenticação/autorização se for para produção.
