@@ -1,16 +1,17 @@
 from fastapi import APIRouter, HTTPException
-from app.models import PixPayment
-from app.inter_api import process_pix_payment
+from .models import PixPayment
+from .gateways.pix_factory import get_pix_gateway
 
 router = APIRouter()
 
 @router.post("/pagar")
-def pay_pix(payload: PixPayment):
+def pay_pix(payload: PixPayment, bank: str = "inter"):
     """
     Endpoint para realizar um pagamento via Pix.
     """
     try:
-        result = process_pix_payment(
+        gateway = get_pix_gateway(bank)
+        result = gateway.process_payment(
             key=payload.key,
             amount=payload.amount,
             description=payload.description

@@ -1,13 +1,5 @@
 from fastapi import FastAPI
 from app.routes import router
-from app import config
-
-print("TEST_MODE =", config.TEST_MODE)
-print("CLIENT_ID =", config.CLIENT_ID)
-print("CLIENT_SECRET =", config.CLIENT_SECRET)
-print("CERT_PATH =", config.CERT_PATH)
-print("KEY_PATH =", config.KEY_PATH)
-print("PAGAMENTO_PIX_URL =", config.PAGAMENTO_PIX_URL)
 
 app = FastAPI(
     title="Pix API - Banco Inter",
