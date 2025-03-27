@@ -1,205 +1,97 @@
-## 📄 **Código comentado com base na documentação**
+## 🔐 Autenticação OAuth 2.0 - Banco Inter
 
-### config.py
-
-```python
-# Informações de autenticação
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+### ✉️ Endpoint
 ```
-📌 **Baseado na documentação:**
-> “Para autenticação, a aplicação deve usar o protocolo OAuth 2.0 com client credentials (Client ID + Client Secret).”  
-📚 [Fonte oficial – OAuth 2.0 Banco Inter](https://developers.inter.co/references/authentication)
+POST https://cdpj.partners.bancointer.com.br/oauth/v2/token
+```
+
+### ✉️ Headers obrigatórios
+```http
+Content-Type: application/x-www-form-urlencoded
+```
+
+### ✉️ Corpo da requisição (form-urlencoded)
+| Campo           | Tipo     | Obrigatório | Descrição                                                                 |
+|------------------|----------|-------------|------------------------------------------------------------------------------|
+| `client_id`      | string   | Sim         | Obtido na tela de aplicações do Internet Banking PJ                      |
+| `client_secret`  | string   | Sim         | Obtido junto com o client_id                                                |
+| `grant_type`     | string   | Sim         | Sempre "client_credentials"                                                 |
+| `scope`          | string   | Sim         | Deve incluir `pagamento-pix.write`. Vários escopos separados por espaço.     |
+
+### ⌛ Tempo de validade do token
+- 1 hora (3600 segundos)
+
+### ⏳ Rate Limit
+- 5 chamadas por minuto
 
 ---
 
-```python
-# Certificados
-CERT_PATH = os.getenv("CERT_PATH")  # caminho do .pem
-KEY_PATH = os.getenv("KEY_PATH")    # caminho da chave privada .pem
+## 💳 Pagamento Pix
+
+### 🔗 Endpoint
 ```
-📌 **Baseado na documentação:**
-> “Para autenticação via certificado, será necessário baixar os arquivos no formato `.pfx` e convertê-los para `.pem` e chave privada, que serão usados nas chamadas autenticadas.”  
-📚 [Fonte: Guia de Integração > Ative as chaves e certificados](https://developers.inter.co/references/pix)
-
----
-
-```python
-# URLs da API do Banco Inter
-TOKEN_URL = os.getenv("TOKEN_URL", "https://cdpj.partners.bancointer.com.br/oauth/v2/token")
-PAGAMENTO_PIX_URL = os.getenv("PAGAMENTO_PIX_URL", "https://cdpj.partners.bancointer.com.br/banking/v2/pix")
+POST https://cdpj.partners.bancointer.com.br/banking/v2/pix
 ```
-📌 **Baseado na documentação:**
-> - Para autenticação: `POST https://cdpj.partners.bancointer.com.br/oauth/v2/token`
-> - Para pagamento Pix: `POST https://cdpj.partners.bancointer.com.br/pix/v2/pagamentos`  
-📚 [Referência: API Pix Pagamento - Método POST](https://developers.inter.co/references/pix#pix-pagamento)
 
----
+### ⚡ Escopo requerido
+- `pagamento-pix.write`
 
+### ⏳ Rate Limit
+- 60 chamadas por minuto (limitado a 1 por segundo)
+- 10 chamadas por minuto (limite de burst)
 
-### auth.py
+### 🔑 Headers obrigatórios
 
-```python
-def get_access_token():
-    """
-    Realiza autenticação OAuth 2.0 com o Banco Inter e retorna o access token.
-    """
-    url = config.TOKEN_URL
-```
-📌 **Baseado na documentação:**
-> "Para autenticação OAuth 2.0, utilize o endpoint `POST /oauth/v2/token` com grant type `client_credentials`."  
-📚 [Fonte oficial – OAuth 2.0](https://developers.inter.co/references/authentication)
+| Header               | Tipo     | Obrigatório | Descrição                                                                 |
+|----------------------|----------|-------------|------------------------------------------------------------------------------|
+| `Authorization`      | string   | Sim         | "Bearer {access_token}" gerado via autenticação OAuth                     |
+| `x-id-idempotente`   | UUID     | Sim         | ID único para garantir que pagamentos duplicados não ocorram               |
+| `x-conta-corrente`   | string   | Condicional | Apenas se a aplicação estiver vinculada a múltiplas contas correntes       |
+| `Content-Type`       | string   | Sim         | "application/json"                                                          |
 
----
+### 📂 Corpo da requisição (JSON)
+Formato para pagamento com **chave Pix**:
 
-```python
-    data = {
-        "grant_type": "client_credentials"
-    }
-
-    auth = (config.CLIENT_ID, config.CLIENT_SECRET)
-```
-📌 **Baseado na documentação:**
-> “A autenticação requer `client_id` e `client_secret` passados via HTTP Basic Auth. O corpo deve conter `grant_type=client_credentials`.”  
-📚 [Fonte: OAuth com mTLS](https://developers.inter.co/references/authentication)
-
----
-
-```python
-    cert = (config.CERT_PATH, config.KEY_PATH)
-```
-📌 **Baseado na documentação:**
-> “As chamadas para autenticação devem ser feitas utilizando o certificado digital gerado na criação da aplicação.”  
-> “Certificados devem ser enviados no formato `.pem` com chave privada separada.”  
-📚 [Fonte: Instruções de Certificado](https://developers.inter.co/references/pix)
-
----
-
-```python
-    try:
-        response = requests.post(url, data=data, auth=auth, cert=cert)
-        response.raise_for_status()
-```
-✅ *Justificativa:*  
-A requisição está corretamente estruturada com:
-- Método `POST`
-- `data` com `grant_type`
-- `auth` com client credentials
-- `cert` com certificado mTLS
-
-Tudo isso está **explicitamente exigido** pela API Inter.
-
----
-
-```python
-        token = response.json().get("access_token")
-        if not token:
-            raise Exception("Access token não encontrado na resposta.")
-        return token
-```
-📌 **Baseado na documentação:**
-> “A resposta bem-sucedida contém o campo `access_token`, que deverá ser utilizado nos demais endpoints.”  
-📚 [Fonte: Resposta de autenticação](https://developers.inter.co/references/authentication)
-
----
-
-### inter_api.py
-
-```python
-    payload = {
-        "key": chave,
-        "amount": valor,
-        "description": descricao
-    }
-```
-📌 **Baseado na documentação:**
-> Exemplo de corpo do `POST`:
 ```json
 {
-  "key": "chavepix@exemplo.com",
-  "amount": 10.5,
-  "description": "Pagamento de serviço"
+  "valor": "100.00",
+  "descricao": "pagamento...",
+  "destinatario": {
+    "tipo": "CHAVE",
+    "chave": "<chave pix de quem receberá o pagamento>"
+  }
 }
 ```
-📚 [Fonte: Exemplo de Requisição - Pix Pagamento](https://developers.inter.co/references/pix#pix-pagamento)
 
----
+| Campo             | Tipo    | Obrigatório | Descrição                                                                 |
+|-------------------|---------|-------------|------------------------------------------------------------------------------|
+| `valor`           | string  | Sim         | Valor do pagamento em formato decimal string (ex: "100.00")                 |
+| `descricao`       | string  | Não         | Texto opcional (até 140 caracteres)                                          |
+| `destinatario`    | objeto  | Sim         | Contém `tipo` e `chave`                                                      |
+| `destinatario.tipo` | string | Sim         | Sempre "CHAVE" para este tipo de operação                                    |
+| `destinatario.chave`| string | Sim         | Chave Pix do recebedor (email, CPF, CNPJ, EVP, telefone)                    |
 
-```python
-    response = requests.post(
-        url=config.PAGAMENTO_PIX_URL,
-        headers=headers,
-        json=payload,
-        cert=(config.CERT_PATH, config.KEY_PATH)
-    )
-```
-📌 **Baseado na documentação:**
-> “As chamadas aos endpoints devem utilizar o certificado mTLS da aplicação, via `.pem` + chave.”  
-> “Utilize POST em `https://cdpj.partners.bancointer.com.br/pix/v2/pagamentos`”  
-📚 [Fonte: Requisição com certificado - Pix Pagamento](https://developers.inter.co/references/pix#pix-pagamento)
+### 🚀 Respostas esperadas
 
----
-
-### models.py
-
-```python
-class PixPayment(BaseModel):
-    key: str
-    amount: float
-    description: constr(max_length=140)
+**200 OK** - Pagamento realizado com sucesso
+```json
+{
+  "tipoRetorno": "APROVACAO",
+  "codigoSolicitacao": "uuid",
+  "dataPagamento": "2025-03-27",
+  "dataOperacao": "2025-03-27"
+}
 ```
 
-📌 **Baseado na documentação:**
+| Campo              | Tipo    | Descrição                                             |
+|--------------------|---------|----------------------------------------------------------|
+| `tipoRetorno`      | string  | "APROVACAO", "PROCESSADO" ou "AGENDADO"                |
+| `codigoSolicitacao`| string  | ID único da solicitação de pagamento                   |
+| `dataPagamento`    | string  | Data em que o pagamento está agendado ou foi efetuado   |
+| `dataOperacao`     | string  | Data em que o pagamento foi solicitado                   |
 
-> A documentação da API Pix do Banco Inter define o payload para pagamento com os seguintes campos:
+### ❌ Erros comuns
 
-| Campo         | Tipo   | Obrigatório | Observações |
-|---------------|--------|-------------|-------------|
-| `key`         | string | Sim         | Chave Pix do recebedor |
-| `amount`      | number | Sim         | Valor a ser transferido |
-| `description` | string | Não         | Limite de 140 caracteres |
-
-📚 [Fonte: Requisição - Pix Pagamento](https://developers.inter.co/references/pix#pix-pagamento)
-
-✅ Seu modelo está de acordo:
-- `key` como `str`
-- `amount` como `float`
-- `description` limitada a 140 caracteres
-
----
-
-```python
-    @validator('key')
-    def validate_pix_key(cls, v):
-        if re.match(r'^\+\d{1,3}\d{1,14}$', v):
-            return v  # Telefone válido (ex: +5511999998888)
-        elif re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', v):
-            return v  # E-mail válido
-        elif re.match(r'^\d{11}$', v) or re.match(r'^\d{14}$', v):
-            return v  # CPF ou CNPJ válido
-        elif re.match(r'^[0-9a-fA-F]{32}$', v):
-            return v  # EVP (chave aleatória) válido
-        else:
-            raise ValueError('Chave Pix inválida')
-```
-
-📌 **Baseado na documentação:**
-
-> O campo `key` pode ser de vários tipos:
-
-- Chave aleatória (EVP)
-- CPF
-- CNPJ
-- Telefone (formato internacional, ex: +55...)
-- E-mail
-
-📚 [Fonte: Formatos válidos de chave Pix](https://www.bcb.gov.br/estabilidadefinanceira/chavespix)
-
-✅ O validador cobre todos os tipos oficiais:
-- Telefone com DDI `+` e até 15 dígitos
-- E-mail com regex básico
-- CPF (11 dígitos)
-- CNPJ (14 dígitos)
-- EVP (32 caracteres hexadecimais)
-
----
+- `401 Unauthorized` → token inválido, credenciais erradas ou certificado incorreto
+- `403 Forbidden` → escopo incorreto ou não autorizado (`"Faltando escopos necessários"`)
+- `422` ou `400` → corpo da requisição malformado

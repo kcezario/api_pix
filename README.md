@@ -1,36 +1,36 @@
 # Pix Backend - Integração com Banco Inter
 
-Este projeto é um backend em Python para realizar pagamentos via Pix utilizando a API oficial do Banco Inter (contas PJ). Ele autentica via OAuth 2.0 com certificado digital e executa pagamentos diretamente para uma chave Pix.
+Este projeto é um backend em Python para realizar pagamentos via Pix utilizando a **API oficial do Banco Inter (contas PJ)**.  
+A autenticação é feita via OAuth 2.0 com certificado digital e os pagamentos são realizados diretamente para uma **chave Pix**.
 
 ---
 
 ## Funcionalidades
 
 - Autenticação OAuth 2.0 com certificado mTLS
-- Pagamento Pix (chave, valor, descrição)
-- Validação completa dos dados de entrada
-- Comunicação segura com a API oficial do Banco Inter
-- Pronto para testes via Swagger
-- Simulação com `TEST_MODE=true` (sem disparar pagamentos reais)
+- Pagamento Pix via chave (CPF, CNPJ, e-mail, telefone ou EVP)
+- Validação completa dos dados de entrada com Pydantic
+- Modo de simulação com `TEST_MODE=true` (sem enviar Pix real)
+- Pronto para testes com Swagger UI
 
 ---
 
 ## Estrutura do Projeto
 
 ```
-pix_backend/
+api_pix/
 ├── app/
-│   ├── auth.py           # Autenticação OAuth com certificado
-│   ├── config.py         # Configurações (.env)
-│   ├── inter_api.py      # Pagamento via API Pix
-│   ├── models.py         # Validação da requisição
-│   ├── routes.py         # Endpoint HTTP /pagar
+│   ├── auth.py           # Autenticação OAuth com certificado e escopo
+│   ├── config.py         # Configurações via .env
+│   ├── inter_api.py      # Função principal de pagamento
+│   ├── models.py         # Validação de entrada
+│   ├── routes.py         # Endpoint POST /pagar
 │   └── __init__.py
-├── main.py               # Inicialização da aplicação
-├── .env                  # Variáveis de ambiente (não versionar)
+├── main.py               # Inicialização do FastAPI
+├── .env                  # Arquivo com variáveis de ambiente (não versionar)
 ├── .env.example          # Exemplo de .env
-├── requirements.txt      # Dependências
-└── README.md
+├── requirements.txt      # Dependências do projeto
+└── README.md             # Este arquivo :)
 ```
 
 ---
@@ -38,8 +38,9 @@ pix_backend/
 ## Requisitos
 
 - Python 3.9+
-- Conta PJ no Banco Inter com acesso à API Pix
-- Certificado digital da aplicação (.pem + chave)
+- Conta **PJ** no Banco Inter com acesso à API Pix
+- Certificado da aplicação (`.crt` e `.key`, ou `.pfx` convertido)
+- Aplicação criada no Internet Banking com o **escopo `pagamento-pix.write`**
 
 ---
 
@@ -70,18 +71,17 @@ uvicorn main:app --reload
 ```
 
 Acesse:
-- `http://localhost:8000` → Health check
-- `http://localhost:8000/docs` → Swagger UI para testes
+
+- [`http://localhost:8000`](http://localhost:8000) → Health check  
+- [`http://localhost:8000/docs`](http://localhost:8000/docs) → Swagger UI para testes
 
 ---
 
 ## Testando com `TEST_MODE=true`
 
-Durante o desenvolvimento ou integração, você pode simular pagamentos **sem executar nenhuma operação real**.
+Durante o desenvolvimento ou integração, você pode simular pagamentos **sem enviar dados reais para o Banco Inter**.
 
 ### Como ativar:
-
-No seu `.env`:
 
 ```env
 TEST_MODE=true
@@ -89,16 +89,18 @@ TEST_MODE=true
 
 ### Comportamento:
 
-- Nenhuma requisição será enviada ao Banco Inter
-- Você verá mensagens no terminal como:
-  ```
-  TEST_MODE: Simulando pagamento Pix...
-  → key: email@exemplo.com
-  → amount: 20.5
-  → description: Pagamento de teste
-  ```
+- Nenhuma requisição real será enviada.
+- O terminal mostrará:
+
+```
+TEST_MODE: Simulando pagamento Pix...
+→ key: email@exemplo.com
+→ amount: 20.5
+→ description: Pagamento de teste
+```
 
 - A resposta no Swagger será:
+
 ```json
 {
   "status": "sucesso",
@@ -114,20 +116,49 @@ TEST_MODE=true
 
 ---
 
-## Exemplo de Requisição
+## Exemplo de Requisição Real
 
 ```json
 POST /pagar
 {
-  "key": "email@exemplo.com",
-  "amount": 20.5,
-  "description": "Pagamento de teste"
+  "key": "11845885000146",
+  "amount": 1.00,
+  "description": "Teste Pix para CNPJ"
+}
+```
+
+A resposta será algo como:
+
+```json
+{
+  "status": "sucesso",
+  "data": {
+    "tipoRetorno": "APROVACAO",
+    "codigoSolicitacao": "UUID...",
+    "dataPagamento": "2025-03-27",
+    "dataOperacao": "2025-03-27"
+  }
 }
 ```
 
 ---
 
-## Documentação da API Banco Inter
+## Erros comuns
+
+### 401 Unauthorized
+
+- Verifique `CLIENT_ID`, `CLIENT_SECRET` e os certificados.
+- Verifique se a aplicação no Inter é a mesma usada para gerar o certificado.
+
+### 403 Forbidden + `"message": "Faltando escopos necessários."`
+
+- **Solução:** refaça a aplicação no Internet Banking e marque o escopo `pagamento-pix.write`.
+
+---
+
+## Documentação Oficial Banco Inter
 
 - [API Pix - Pagamento](https://developers.inter.co/references/pix#pix-pagamento)
 - [Autenticação OAuth 2.0](https://developers.inter.co/references/authentication)
+- [Ajuda - Como cadastrar uma API?](https://ajuda.inter.co/conta-digital-pessoa-juridica/como-cadastrar-uma-api)
+
