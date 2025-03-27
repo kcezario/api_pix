@@ -1,11 +1,23 @@
+# app/config.py
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Carregar o ambiente correto (desenvolvimento ou produção)
-env_file = ".env" if os.getenv("ENV") != "production" else ".env.prod"
-load_dotenv(env_file)
+# Carrega o .env da raiz do projeto
+env_path = Path(__file__).resolve().parents[1] / '.env'
+load_dotenv(dotenv_path=env_path)
 
+# Informações de autenticação
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-CERT_PATH = os.getenv("CERT_PATH")
-CERT_PASSWORD = os.getenv("CERT_PASSWORD")
+
+# Certificados
+CERT_PATH = os.getenv("CERT_PATH")  # caminho do .pem
+KEY_PATH = os.getenv("KEY_PATH")    # caminho da chave privada .pem
+
+# URLs da API do Banco Inter
+TOKEN_URL = os.getenv("TOKEN_URL", "https://cdpj.partners.bancointer.com.br/oauth/v2/token")
+PAGAMENTO_PIX_URL = os.getenv("PAGAMENTO_PIX_URL", "https://cdpj.partners.bancointer.com.br/pix/v2/pagamentos")
+
+# Modo de teste (ignora chamadas reais à API)
+TEST_MODE = os.getenv("TEST_MODE", "false").lower() == "true"
