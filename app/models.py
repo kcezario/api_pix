@@ -1,10 +1,11 @@
-from pydantic import BaseModel, constr, validator
+from pydantic import BaseModel, StringConstraints, validator
+from typing_extensions import Annotated
 import re
 
 class PixPayment(BaseModel):
     key: str
     amount: float
-    description: constr(max_length=140)
+    description: Annotated[str, StringConstraints(max_length=140)]
 
     @validator('key')
     def validate_pix_key(cls, v):
