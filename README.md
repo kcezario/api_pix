@@ -1,21 +1,21 @@
-# 💸 Pix Backend - Integração com Banco Inter
+# Pix Backend - Integração com Banco Inter
 
 Este projeto é um backend em Python para realizar pagamentos via Pix utilizando a API oficial do Banco Inter (contas PJ). Ele autentica via OAuth 2.0 com certificado digital e executa pagamentos diretamente para uma chave Pix.
 
 ---
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
-- 🔐 Autenticação OAuth 2.0 com certificado mTLS
-- 💰 Pagamento Pix (chave, valor, descrição)
-- ✅ Validação completa dos dados de entrada
-- 🔄 Comunicação segura com a API oficial do Banco Inter
-- 🧪 Pronto para testes via Swagger
-- 🧪 Simulação com `TEST_MODE=true` (sem disparar pagamentos reais)
+- Autenticação OAuth 2.0 com certificado mTLS
+- Pagamento Pix (chave, valor, descrição)
+- Validação completa dos dados de entrada
+- Comunicação segura com a API oficial do Banco Inter
+- Pronto para testes via Swagger
+- Simulação com `TEST_MODE=true` (sem disparar pagamentos reais)
 
 ---
 
-## 🗂️ Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 pix_backend/
@@ -35,7 +35,7 @@ pix_backend/
 
 ---
 
-## ⚙️ Requisitos
+## Requisitos
 
 - Python 3.9+
 - Conta PJ no Banco Inter com acesso à API Pix
@@ -43,12 +43,12 @@ pix_backend/
 
 ---
 
-## 📦 Instalação
+## Instalação
 
 ```bash
 # Clonar o projeto
-git clone https://github.com/seuusuario/pix-backend.git
-cd pix-backend
+git clone https://github.com/kcezario/api_pix.git
+cd api_pix
 
 # Criar ambiente virtual
 python -m venv venv
@@ -63,7 +63,7 @@ cp .env.example .env
 
 ---
 
-## 🧪 Executando em modo desenvolvimento
+## Executando em modo desenvolvimento
 
 ```bash
 uvicorn main:app --reload
@@ -75,7 +75,7 @@ Acesse:
 
 ---
 
-## 🧪 Testando com `TEST_MODE=true`
+## Testando com `TEST_MODE=true`
 
 Durante o desenvolvimento ou integração, você pode simular pagamentos **sem executar nenhuma operação real**.
 
@@ -114,7 +114,7 @@ TEST_MODE=true
 
 ---
 
-## 🔐 Exemplo de Requisição
+## Exemplo de Requisição
 
 ```json
 POST /pagar
@@ -127,10 +127,10 @@ POST /pagar
 
 ---
 
-## 📄 Documentação da API Banco Inter
+## Documentação da API Banco Inter
 
-- [🔗 API Pix - Pagamento](https://developers.inter.co/references/pix#pix-pagamento)
-- [🔗 Autenticação OAuth 2.0](https://developers.inter.co/references/authentication)
+- [API Pix - Pagamento](https://developers.inter.co/references/pix#pix-pagamento)
+- [Autenticação OAuth 2.0](https://developers.inter.co/references/authentication)
 
 ---
 
