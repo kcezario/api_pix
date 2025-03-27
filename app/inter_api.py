@@ -1,4 +1,5 @@
 import requests
+import uuid
 from app import config
 from app.auth import get_access_token
 
@@ -31,16 +32,22 @@ def process_pix_payment(key: str, amount: float, description: str) -> dict:
         }
 
     access_token = get_access_token()
+    
+    idempotency_key = str(uuid.uuid4())
 
     headers = {
         "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "x-id-idempotente": idempotency_key,
     }
 
     payload = {
-        "key": key,
-        "amount": amount,
-        "description": description
+        "valor": f"{amount:.2f}",
+        "descricao": description,
+        "destinatario": {
+            "tipo": "CHAVE",
+            "chave": key
+        }
     }
 
     try:
@@ -53,5 +60,7 @@ def process_pix_payment(key: str, amount: float, description: str) -> dict:
         response.raise_for_status()
         return response.json()
 
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.HTTPError as e:
+        print("Resposta detalhada:", e.response.text)
         raise RuntimeError(f"Erro ao realizar pagamento Pix: {e}")
+

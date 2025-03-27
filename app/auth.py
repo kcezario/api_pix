@@ -12,7 +12,8 @@ def get_access_token():
 
     url = config.TOKEN_URL
     data = {
-        "grant_type": "client_credentials"
+        "grant_type": "client_credentials",
+        "scope": "pagamento-pix.write"
     }
     auth = (config.CLIENT_ID, config.CLIENT_SECRET)
     cert = (config.CERT_PATH, config.KEY_PATH)
@@ -20,6 +21,8 @@ def get_access_token():
     try:
         response = requests.post(url, data=data, auth=auth, cert=cert)
         response.raise_for_status()
+        print("Resposta da API de token:")
+        print(response.json())
         token = response.json().get("access_token")
         if not token:
             raise Exception("Access token não encontrado na resposta.")

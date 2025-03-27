@@ -27,7 +27,7 @@ KEY_PATH = os.getenv("KEY_PATH")    # caminho da chave privada .pem
 ```python
 # URLs da API do Banco Inter
 TOKEN_URL = os.getenv("TOKEN_URL", "https://cdpj.partners.bancointer.com.br/oauth/v2/token")
-PAGAMENTO_PIX_URL = os.getenv("PAGAMENTO_PIX_URL", "https://cdpj.partners.bancointer.com.br/pix/v2/pagamentos")
+PAGAMENTO_PIX_URL = os.getenv("PAGAMENTO_PIX_URL", "https://cdpj.partners.bancointer.com.br/banking/v2/pix")
 ```
 📌 **Baseado na documentação:**
 > - Para autenticação: `POST https://cdpj.partners.bancointer.com.br/oauth/v2/token`
