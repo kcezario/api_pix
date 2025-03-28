@@ -1,7 +1,7 @@
 import os
 import requests
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from typing import Optional
 from .pix_gateway_interface import PixGateway
@@ -9,6 +9,12 @@ from .pix_gateway_interface import PixGateway
 @dataclass
 class InterPixGateway(PixGateway):
     account_number: Optional[str] = None
+    client_id: str = field(init=False)
+    client_secret: str = field(init=False)
+    cert_path: str = field(init=False)
+    key_path: str = field(init=False)
+    token_url: str = field(init=False)
+    payment_url: str = field(init=False)
 
     def get_config(self) -> dict:
         """
