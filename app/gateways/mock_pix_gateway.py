@@ -12,7 +12,7 @@ class MockPixGateway(PixGateway):
         self.payment_url = "https://mock/pix"
 
     def get_access_token(self) -> str:
-        self.get_access_token()
+        self.get_config()
         print("[Mock] Gerando token fake...")
         return "mock-access-token"
 
@@ -27,4 +27,16 @@ class MockPixGateway(PixGateway):
             "amount": amount,
             "description": description,
             "message": "Pagamento simulado com sucesso (modo de teste)"
+        }
+
+    def get_payment_status(self, transaction_id: str) -> dict:
+        print("[Mock] Simulando consulta de pagamento Pix...")
+        print(f"→ transaction_id: {transaction_id}")
+        return {
+            "status": "simulado",
+            "transaction_id": transaction_id,
+            "tipoRetorno": "APROVACAO",
+            "dataPagamento": "2025-03-27",
+            "dataOperacao": "2025-03-27",
+            "message": "Consulta simulada com sucesso (modo de teste)"
         }
