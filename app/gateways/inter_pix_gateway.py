@@ -13,8 +13,7 @@ class InterPixGateway(PixGateway):
     client_secret: str = field(init=False)
     cert_path: str = field(init=False)
     key_path: str = field(init=False)
-    token_url: str = field(init=False)
-    payment_url: str = field(init=False)
+    api_url: str = field(init=False)
 
     def get_config(self) -> dict:
         """
@@ -25,8 +24,7 @@ class InterPixGateway(PixGateway):
         self.client_secret = os.getenv("INTER_CLIENT_SECRET")
         self.cert_path = os.getenv("INTER_CERT_PATH")
         self.key_path = os.getenv("INTER_KEY_PATH")
-        self.token_url = os.getenv("INTER_TOKEN_URL")
-        self.payment_url = os.getenv("INTER_PAGAMENTO_PIX_URL")
+        self.api_url = os.getenv("INTER_API_URL")
 
     def get_access_token(self, scope: str) -> str:
         self.get_config()
@@ -39,7 +37,7 @@ class InterPixGateway(PixGateway):
         cert = (self.cert_path, self.key_path)
 
         response = requests.post(
-            url=self.token_url,
+            url=self.api_url + "/oauth/v2/token",
             data=data,
             auth=auth,
             cert=cert,
@@ -76,7 +74,7 @@ class InterPixGateway(PixGateway):
 
         try:
             response = requests.post(
-                url=self.payment_url,
+                url=self.api_url + "/banking/v2/pix",
                 headers=headers,
                 json=payload,
                 cert=(self.cert_path, self.key_path)
@@ -104,7 +102,7 @@ class InterPixGateway(PixGateway):
         if self.account_number:
             headers["x-conta-corrente"] = self.account_number
 
-        url = f"{self.payment_url}/{transaction_id}"
+        url = f"{self.api_url}/banking/v2/pix/{transaction_id}"
 
         try:
             response = requests.get(

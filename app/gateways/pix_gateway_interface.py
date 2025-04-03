@@ -3,13 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class PixGateway(ABC):
-    client_id: str
-    client_secret: str
-    cert_path: str
-    key_path: str
-    token_url: str
-    payment_url: str
-
+    
     @abstractmethod
     def get_config(self) -> dict:
         pass
@@ -25,5 +19,3 @@ class PixGateway(ABC):
     @abstractmethod
     def get_payment_status(self, transaction_id: str) -> dict:
         pass
-    
-    
